@@ -1,12 +1,12 @@
 # livedb-mongo-memory
 
-MongoDB like in memomy storage for [livedb](https://github.com/share/livedb). This driver can be used both as a snapshot
-store and oplog.
+MongoDB like in memomy storage for [livedb](https://github.com/share/livedb). 
+This driver can be used both as a snapshot store and oplog.
  
 The driver is written just for fun and it's not for the real use (maybe just for tests). 
 It is just the way for me to learn livedb more deeply.
 
-It based of [mingo](https://github.com/kofrasa/mingo) so it supports mongo queries with:
+It based on [mingo](https://github.com/kofrasa/mingo) so it supports mongo queries with:
 `$gt`, `$gte`, `$lt`, `$lte`, `$ne`, `$nin`, `$in`, `$and`, `$or`, `$nor`, `$not`, 
 `$regex`, `$mod`, `$where`, `$all`, `$elemMatch`, `$size`, `$exists`, `$type`,
  `$orderby` mongo specific operations and also `$count`, `$skip`, `$limit` - 
