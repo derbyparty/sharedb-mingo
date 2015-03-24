@@ -15,7 +15,7 @@
   "devDependencies": {
     "mocha": "^1",
     "coffee-script": "~1.7",
-    "livedb": ">=0.3"
+    "livedb": "0.4.11"
   },
   "repository": "git://github.com/zag2art/livedb-mongo-memory.git"
 }
