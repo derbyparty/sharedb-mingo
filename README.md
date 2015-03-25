@@ -1,4 +1,4 @@
-# livedb-mongo-memory
+# livedb-mingo
 
 MongoDB like in memomy storage for [livedb](https://github.com/share/livedb). 
 This driver can be used both as a snapshot, store and oplog.
@@ -17,7 +17,7 @@ At the moment it doesn't support $distinct, $mapReduce and $aggregate operators.
 ## Usage
 
 ```javascript
-var livedbmongo = require('livedb-mongo-memory');
+var livedbmongo = require('livedb-mingo');
 var mongo = livedbmongo(options);
 
 var livedb = require('livedb').client(mongo); // Or whatever. See livedb's docs.
