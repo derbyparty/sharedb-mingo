@@ -1,7 +1,7 @@
 {
-  "name": "livedb-mongo-memory",
+  "name": "livedb-mingo",
   "version": "1.0.0",
-  "description": "livedb-mongo in memory using 'mingo'",
+  "description": "livedb-mongo inmemory using 'mingo'",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --compilers coffee:coffee-script/register --reporter spec --check-leaks test/test.coffee"
@@ -17,5 +17,5 @@
     "coffee-script": "~1.7",
     "livedb": "0.4.11"
   },
-  "repository": "git://github.com/zag2art/livedb-mongo-memory.git"
+  "repository": "git://github.com/zag2art/livedb-mingo.git"
 }
