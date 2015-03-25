@@ -17,14 +17,14 @@ At the moment it doesn't support $distinct, $mapReduce and $aggregate operators.
 ## Usage
 
 ```javascript
-var livedbmongo = require('livedb-mingo');
-var mongo = livedbmongo(options);
+var livedbmingo = require('livedb-mingo');
+var mingo = livedbmingo(options);
 
-var livedb = require('livedb').client(mongo); // Or whatever. See livedb's docs.
+var livedb = require('livedb').client(mingo); // Or whatever. See livedb's docs.
 ```
 
 ## MIT License
-Copyright (c) 2014 by Artur Zayats
+Copyright (c) 2015 by Artur Zayats
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
