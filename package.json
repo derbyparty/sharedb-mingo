@@ -2,20 +2,20 @@
   "name": "livedb-mingo",
   "version": "1.0.1",
   "description": "livedb-mongo inmemory using 'mingo'",
-  "main": "lib/index.js",
+  "main": "./index.js",
   "scripts": {
-    "test": "mocha --compilers coffee:coffee-script/register --reporter spec --check-leaks test/test.coffee"
+    "test": "node_modules/.bin/mocha --reporter spec --timeout 5000 test.js"
   },
   "author": "Artur Zayats <zag2art@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "sharedb": "^0.11.6",
     "clone": "^0.2.0",
     "mingo": "^0.2.5"
   },
   "devDependencies": {
-    "mocha": "^1",
-    "coffee-script": "~1.7",
-    "livedb": "0.4.11"
+    "expect.js": "^0.3.1",
+    "mocha": "^2.3.3"
   },
   "repository": "git://github.com/zag2art/livedb-mingo.git"
 }
