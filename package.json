@@ -1,6 +1,6 @@
 {
   "name": "livedb-mingo",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "livedb-mongo inmemory using 'mingo'",
   "main": "./index.js",
   "scripts": {
