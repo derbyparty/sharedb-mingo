@@ -1,7 +1,7 @@
 {
-  "name": "livedb-mingo",
+  "name": "sharedb-mingo",
   "version": "2.0.1",
-  "description": "livedb-mongo inmemory using 'mingo'",
+  "description": "ShareDb-Mongo inmemory using 'mingo'",
   "main": "./index.js",
   "scripts": {
     "test": "node_modules/.bin/mocha --reporter spec --timeout 5000 test.js"
@@ -17,5 +17,5 @@
     "expect.js": "^0.3.1",
     "mocha": "^2.3.3"
   },
-  "repository": "git://github.com/zag2art/livedb-mingo.git"
+  "repository": "git://github.com/zag2art/sharedb-mingo.git"
 }
