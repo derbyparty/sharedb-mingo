@@ -1,7 +1,7 @@
 {
   "name": "sharedb-mingo",
   "version": "2.0.2",
-  "description": "ShareDb-Mongo inmemory using 'mingo'",
+  "description": "ShareDb-Mongo in-memory using 'mingo'",
   "main": "./index.js",
   "scripts": {
     "test": "node_modules/.bin/mocha --reporter spec --timeout 5000 test.js"
@@ -9,9 +9,11 @@
   "author": "Artur Zayats <zag2art@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "sharedb": "^0.11.6",
     "clone": "^0.2.0",
     "mingo": "^0.2.5"
+  },
+  "peerDependencies": {
+    "sharedb": "*"
   },
   "devDependencies": {
     "expect.js": "^0.3.1",

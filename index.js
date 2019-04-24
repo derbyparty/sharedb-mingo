@@ -68,7 +68,7 @@ ShareDbMingo.prototype.dropDatabase = function(callback) {
   });
 };
 
-ShareDbMingo.prototype.commit = function(collection, id, op, snapshot, callback) {
+ShareDbMingo.prototype.commit = function(collection, id, op, snapshot, options, callback) {
   var db = this;
   process.nextTick(function() {
     var version = db._getVersionSync(collection, id);
@@ -108,7 +108,7 @@ ShareDbMingo.prototype._getVersionSync = function(collection, id) {
 // Get the named document from the database. The callback is called with (err,
 // data). data may be null if the docuemnt has never been created in the
 // database.
-ShareDbMingo.prototype.getSnapshot = function(collectionName, id, fields, callback) {
+ShareDbMingo.prototype.getSnapshot = function(collectionName, id, fields, options, callback) {
   var db = this;
 
   process.nextTick(function() {
@@ -127,7 +127,7 @@ ShareDbMingo.prototype._getSnapshotSync = function (collectionName, id){
 
 // ********* Oplog API
 
-ShareDbMingo.prototype.getOps = function(collection, id, from, to, callback) {
+ShareDbMingo.prototype.getOps = function(collection, id, from, to, options, callback) {
   var db = this;
   process.nextTick(function() {
     var opLog = db._getOpLogSync(collection, id);
