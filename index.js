@@ -43,31 +43,34 @@ var cursorOperators = {
 // All databases should implement the close() method regardless of which APIs
 // they expose.
 
-function CollectionStore (store) {
+function CollectionStore (store, prefix) {
   this.store = store
+  this.prefix = prefix
 }
 
 CollectionStore.prototype.getCollectionDocs = function (collection) {
   return this.store.getItemIds(collection).then((ids) => {
-    const promises = ids.filter(id => (id.split('.')[0] === collection)).map(id => (this.store.getItem(id)))
+    const promises = ids.filter(id => {
+      const split = id.split('.')
+      return split.length === 3 && split[0] === this.prefix && split[1] === collection
+    }).map(id => (this.store.getItem(id)))
     return Promise.all(promises)
   })
 }
 
 CollectionStore.prototype.getDoc = function (collection, docId) {
-  return this.store.getItem(`${collection}.${docId}`)
+  return this.store.getItem(`${this.prefix}.${collection}.${docId}`)
 }
 
 CollectionStore.prototype.setDoc = function (collection, docId, doc) {
-  return this.store.setItem(`${collection}.${docId}`, doc)
+  return this.store.setItem(`${this.prefix}.${collection}.${docId}`, doc)
 }
 
 function ShareDbMingo(options) {
   if (!(this instanceof ShareDbMingo)) return new ShareDbMingo();
 
   options = options || {};
-
-  this.store = new CollectionStore(options.store || new memoryStore())
+  this.store = new CollectionStore(options.store || new memoryStore(), options.storePrefix || 'store')
 
   this.allowJSQueries = options.allowAllQueries || options.allowJSQueries || false;
   this.allowAggregateQueries = options.allowAllQueries || options.allowAggregateQueries || false;
