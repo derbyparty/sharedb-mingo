@@ -3,6 +3,7 @@ module.exports = ShareDbMingo;
 var Mingo = require('mingo');
 var DB = require('sharedb').DB;
 var clone = require('clone');
+var memoryStore = require('@js-code/memory-store')
 
 var metaOperators = {
   $comment: true
@@ -42,13 +43,31 @@ var cursorOperators = {
 // All databases should implement the close() method regardless of which APIs
 // they expose.
 
+function CollectionStore (store) {
+  this.store = store
+}
+
+CollectionStore.prototype.getCollectionDocs = function (collection) {
+  return this.store.getItemIds(collection).then((ids) => {
+    const promises = ids.filter(id => (id.split('.')[0] === collection)).map(id => (this.store.getItem(id)))
+    return Promise.all(promises)
+  })
+}
+
+CollectionStore.prototype.getDoc = function (collection, docId) {
+  return this.store.getItem(`${collection}.${docId}`)
+}
+
+CollectionStore.prototype.setDoc = function (collection, docId, doc) {
+  return this.store.setItem(`${collection}.${docId}`, doc)
+}
+
 function ShareDbMingo(options) {
   if (!(this instanceof ShareDbMingo)) return new ShareDbMingo();
 
-  this.docs = {};
-  this.ops = {};
-
   options = options || {};
+
+  this.store = new CollectionStore(options.store || new memoryStore())
 
   this.allowJSQueries = options.allowAllQueries || options.allowJSQueries || false;
   this.allowAggregateQueries = options.allowAllQueries || options.allowAggregateQueries || false;
@@ -60,47 +79,28 @@ ShareDbMingo.prototype = Object.create(DB.prototype);
 
 ShareDbMingo.prototype.dropDatabase = function(callback) {
   var db = this;
-  process.nextTick(function() {
-    db.docs = {};
-    db.ops = {};
-
+  db.store.clean().then(function() {
     callback && callback();
-  });
+  })
 };
 
 ShareDbMingo.prototype.commit = function(collection, id, op, snapshot, options, callback) {
   var db = this;
-  process.nextTick(function() {
-    var version = db._getVersionSync(collection, id);
+  db.store.getDoc(`o_${collection}`, id).then((opLog = []) => {
+    var version = opLog.length || 0
     if (snapshot.v !== version + 1) {
       var succeeded = false;
       return callback(null, succeeded);
     }
-    var err = db._writeOpSync(collection, id, op);
-    if (err) return callback(err);
-    err = db._writeSnapshotSync(collection, id, snapshot);
-    if (err) return callback(err);
-    var succeeded = true;
-    callback(null, succeeded);
-  });
-};
-
-ShareDbMingo.prototype._writeSnapshotSync = function(collection, id, snapshot) {
-  var collectionDocs = this.docs[collection] || (this.docs[collection] = {});
-  collectionDocs[id] = castToDoc(id, clone(snapshot));
-};
-
-ShareDbMingo.prototype._writeOpSync = function(collection, id, op) {
-  var opLog = this._getOpLogSync(collection, id);
-  // This will write an op in the log at its version, which should always be
-  // the next item in the array under normal operation
-  opLog[op.v] = clone(op);
-};
-
-ShareDbMingo.prototype._getVersionSync = function(collection, id) {
-  var collectionOps = this.ops[collection];
-  var version = (collectionOps && collectionOps[id] && collectionOps[id].length) || 0;
-  return version;
+    opLog = clone(opLog)
+    opLog[op.v] = clone(op)
+    db.store.setDoc(`o_${collection}`, id, opLog).then(() => {
+      db.store.setDoc(collection, id, castToDoc(id, clone(snapshot))).then(function () {
+        var succeeded = true;
+        callback(null, succeeded);
+      }).catch(err => callback(err))
+    }).catch(err => callback(err))
+  }).catch(err => callback(err))
 };
 
 // Snapshot database API
@@ -110,40 +110,26 @@ ShareDbMingo.prototype._getVersionSync = function(collection, id) {
 // database.
 ShareDbMingo.prototype.getSnapshot = function(collectionName, id, fields, options, callback) {
   var db = this;
-
-  process.nextTick(function() {
-    var snapshot = db._getSnapshotSync(collectionName, id, fields);
+  db.store.getDoc(collectionName, id, fields).then((doc) => {
+    var snapshot = (doc) ? castToSnapshot(clone(doc)) : new MongoSnapshot(id, 0, null, undefined);
     callback(null, snapshot);
-  });
-};
-
-ShareDbMingo.prototype._getSnapshotSync = function (collectionName, id){
-  var collection = this.docs[collectionName];
-  var doc = collection && collection[id];
-
-  var snapshot = (doc) ? castToSnapshot(clone(doc)) : new MongoSnapshot(id, 0, null, undefined);
-  return snapshot;
+  }).catch(function(error) {
+    callback(error)
+  })
 };
 
 // ********* Oplog API
 
 ShareDbMingo.prototype.getOps = function(collection, id, from, to, options, callback) {
   var db = this;
-  process.nextTick(function() {
-    var opLog = db._getOpLogSync(collection, id);
+  db.store.getDoc(`o_${collection}`, id).then((opLog = []) => {
     if (to == null) {
       to = opLog.length;
     }
     var ops = clone(opLog.slice(from, to));
     callback(null, ops);
-  });
+  }).catch(err => callback(err))
 };
-
-ShareDbMingo.prototype._getOpLogSync = function(collection, id) {
-  var collectionOps = this.ops[collection] || (this.ops[collection] = {});
-  return collectionOps[id] || (collectionOps[id] = []);
-};
-
 
 // ********** Query support API.
 
@@ -151,20 +137,17 @@ ShareDbMingo.prototype._getOpLogSync = function(collection, id) {
 // regardless of query by default
 ShareDbMingo.prototype.query = function(collection, query, fields, options, callback) {
   var db = this;
-  process.nextTick(function() {
-    var collectionDocs = db.docs[collection];
-    var docs = [];
-    for (var id in collectionDocs || {}) {
-      var doc = db.docs[collection] && db.docs[collection][id];
-      docs.push(clone(doc));
-    }
+  this.store.getCollectionDocs(collection).then(function (docs) {
+    docs = docs.map(function(doc) {
+      return clone(doc)
+    })
     try {
       var data = db._querySync(docs, clone(query), options);
       callback(null, data.results || [], data.extra);
     } catch (err) {
       callback(err);
     }
-  });
+  }).catch(err => (callback(err)));
 };
 
 // For testing, it may be useful to implement the desired query language by

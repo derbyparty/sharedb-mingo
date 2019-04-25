@@ -9,6 +9,7 @@
   "author": "Artur Zayats <zag2art@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@js-code/memory-store": "0.0.2",
     "clone": "^0.2.0",
     "mingo": "^0.2.5"
   },
@@ -17,7 +18,7 @@
   },
   "devDependencies": {
     "expect.js": "^0.3.1",
-    "mocha": "^2.3.3"
+    "mocha": "^6.1.4"
   },
   "repository": "git://github.com/zag2art/sharedb-mingo.git"
 }
