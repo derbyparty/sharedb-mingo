@@ -89,7 +89,8 @@ ShareDbMingo.prototype.dropDatabase = function(callback) {
 
 ShareDbMingo.prototype.commit = function(collection, id, op, snapshot, options, callback) {
   var db = this;
-  db.store.getDoc(`o_${collection}`, id).then((opLog = []) => {
+  db.store.getDoc(`o_${collection}`, id).then((opLog) => {
+    if (!Array.isArray(opLog)) opLog = []
     var version = opLog.length || 0
     if (snapshot.v !== version + 1) {
       var succeeded = false;
@@ -125,7 +126,9 @@ ShareDbMingo.prototype.getSnapshot = function(collectionName, id, fields, option
 
 ShareDbMingo.prototype.getOps = function(collection, id, from, to, options, callback) {
   var db = this;
-  db.store.getDoc(`o_${collection}`, id).then((opLog = []) => {
+  db.store.getDoc(`o_${collection}`, id).then((opLog) => {
+    if (!Array.isArray(opLog)) opLog = []
+
     if (to == null) {
       to = opLog.length;
     }
