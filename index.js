@@ -3,6 +3,7 @@ module.exports = ShareDbMingo;
 var Mingo = require('mingo');
 var DB = require('sharedb').DB;
 var clone = require('clone');
+var uuid = require('uuid/v1')
 var memoryStore = require('@js-code/memory-store')
 
 var metaOperators = {
@@ -89,23 +90,39 @@ ShareDbMingo.prototype.dropDatabase = function(callback) {
 
 ShareDbMingo.prototype.commit = function(collection, id, op, snapshot, options, callback) {
   var db = this;
-  db.store.getDoc(`o_${collection}`, id).then((opLog) => {
-    if (!Array.isArray(opLog)) opLog = []
-    var version = opLog.length || 0
-    if (snapshot.v !== version + 1) {
-      var succeeded = false;
-      return callback(null, succeeded);
-    }
-    opLog = clone(opLog)
-    opLog[op.v] = clone(op)
-    db.store.setDoc(`o_${collection}`, id, opLog).then(() => {
-      db.store.setDoc(collection, id, castToDoc(id, clone(snapshot))).then(function () {
-        var succeeded = true;
-        callback(null, succeeded);
-      }).catch(err => callback(err))
+  this._writeOp(collection, id, op, snapshot, (error, opId) => {
+    if (error) return callback(error)
+    db.store.setDoc(collection, id, castToDoc(id, clone(snapshot), opId)).then(function () {
+      var succeeded = true;
+      callback(null, succeeded);
     }).catch(err => callback(err))
-  }).catch(err => callback(err))
-};
+  })
+
+}
+
+ShareDbMingo.prototype._writeOp = function(collectionName, id, op, snapshot, callback) {
+  if (typeof op.v !== 'number') {
+    var err = 'Invalid op version ' + collectionName + '.' + id + ' ' + op.v
+    return callback(err);
+  }
+
+  const opCollectionName = this.getOplogCollectionName(collectionName)
+
+  var doc = shallowClone(op);
+  doc.d = id;
+  doc.o = snapshot._opLink
+  doc._id = uuid()
+  this.store.setDoc(opCollectionName, doc._id, doc).then(() => {
+    callback(null, doc._id)
+  }).catch((error) => {
+    callback(error)
+  })
+}
+
+
+ShareDbMingo.prototype.getOplogCollectionName = function(collectionName) {
+  return 'o_' + collectionName;
+}
 
 // Snapshot database API
 
@@ -124,17 +141,30 @@ ShareDbMingo.prototype.getSnapshot = function(collectionName, id, fields, option
 
 // ********* Oplog API
 
+function getOpsQuery(id, from) {
+  return (from == null) ?
+    {d: id} :
+    {d: id, v: {$gte: from}};
+}
+
 ShareDbMingo.prototype.getOps = function(collection, id, from, to, options, callback) {
   var db = this;
-  db.store.getDoc(`o_${collection}`, id).then((opLog) => {
-    if (!Array.isArray(opLog)) opLog = []
+  const opCollectionName = this.getOplogCollectionName(collection)
 
-    if (to == null) {
-      to = opLog.length;
+  this.store.getCollectionDocs(opCollectionName).then(function (docs) {
+    docs = docs.map(function(doc) {
+      return clone(doc)
+    })
+
+    var query = getOpsQuery(id, from);
+    query['$sort'] = {v: 1}
+    try {
+      var data = db._querySync(docs, query, options);
+      callback(null, data.results || []);
+    } catch (err) {
+      callback(err);
     }
-    var ops = clone(opLog.slice(from, to));
-    callback(null, ops);
-  }).catch(err => callback(err))
+  }).catch(err => (callback(err)));
 };
 
 // ********** Query support API.
