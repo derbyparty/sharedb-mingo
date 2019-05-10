@@ -50,7 +50,7 @@ function CollectionStore (store, prefix) {
 }
 
 CollectionStore.prototype.getCollectionDocs = function (collection) {
-  return this.store.getItemIds(collection).then((ids) => {
+  return this.store.getItemIds().then((ids) => {
     const promises = ids.filter(id => {
       const split = id.split('.')
       return split.length === 3 && split[0] === this.prefix && split[1] === collection
@@ -65,6 +65,43 @@ CollectionStore.prototype.getDoc = function (collection, docId) {
 
 CollectionStore.prototype.setDoc = function (collection, docId, doc) {
   return this.store.setItem(`${this.prefix}.${collection}.${docId}`, doc)
+}
+
+CollectionStore.prototype.getCollections = function () {
+  return new Promise((resolve, reject) => {
+    this.store.getItemIds().then((ids) => {
+      const collections = []
+
+      for (const key of ids) {
+        const [prefix, collection, id] = key.split('.')
+        if (prefix === this.prefix) {
+          if (!collections.includes(collection)) {
+            collections.push(collection)
+          }
+        }
+      }
+      resolve(collections)
+    }).catch(err => reject(err))
+  })
+}
+
+CollectionStore.prototype.getCollectionDocIds = function (collection) {
+  return new Promise((resolve, reject) => {
+    this.store.getItemIds().then((ids) => {
+      const docIds = []
+
+      for (const key of ids) {
+        const [prefix, collectionName, id] = key.split('.')
+        if (collection !== collectionName) continue
+        if (prefix === this.prefix) {
+          if (!docIds.includes(id)) {
+            docIds.push(id)
+          }
+        }
+      }
+      resolve(docIds)
+    }).catch(err => reject(err))
+  })
 }
 
 function ShareDbMingo(options) {
