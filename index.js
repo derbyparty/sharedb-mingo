@@ -67,6 +67,10 @@ CollectionStore.prototype.setDoc = function (collection, docId, doc) {
   return this.store.setItem(`${this.prefix}.${collection}.${docId}`, doc)
 }
 
+CollectionStore.prototype.removeDoc = function (collection, docId) {
+  return this.store.removeItem(`${this.prefix}.${collection}.${docId}`)
+}
+
 CollectionStore.prototype.getCollections = function () {
   return new Promise((resolve, reject) => {
     this.store.getItemIds().then((ids) => {
