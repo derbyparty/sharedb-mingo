@@ -54,17 +54,29 @@ CollectionStore.prototype.getCollectionDocs = function (collection) {
     const promises = ids.filter(id => {
       const split = id.split('.')
       return split.length === 3 && split[0] === this.prefix && split[1] === collection
-    }).map(id => (this.store.getItem(id)))
+    }).map(key => {
+      const [prefix, collectionName, id] = key.split('.')
+      return this.getDoc(collection, id)
+    })
     return Promise.all(promises)
   })
 }
 
 CollectionStore.prototype.getDoc = function (collection, docId) {
-  return this.store.getItem(`${this.prefix}.${collection}.${docId}`)
+  return new Promise((resolve, reject) => {
+    this.store.getItem(`${this.prefix}.${collection}.${docId}`).then(value => {
+      if (typeof value === 'string' || value instanceof String) {
+        value = JSON.parse(value)
+      }
+      resolve(value)
+    }).catch(e => {
+      reject(e)
+    })
+  })
 }
 
 CollectionStore.prototype.setDoc = function (collection, docId, doc) {
-  return this.store.setItem(`${this.prefix}.${collection}.${docId}`, doc)
+  return this.store.setItem(`${this.prefix}.${collection}.${docId}`, JSON.stringify(doc))
 }
 
 CollectionStore.prototype.removeDoc = function (collection, docId) {
