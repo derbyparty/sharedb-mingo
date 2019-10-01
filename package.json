@@ -1,6 +1,6 @@
 {
   "name": "sharedb-mingo",
-  "version": "3.0.6",
+  "version": "3.0.7",
   "description": "ShareDb-Mongo in-memory using 'mingo'",
   "main": "./index.js",
   "scripts": {
